@@ -22,7 +22,12 @@
 
 #include <Arduino.h>
 
+#ifndef CORE_WILDFIRE
 #include "Adafruit_CC3000.h"
+#else
+#include "WildFire_CC3000.h"
+#include "WildFire_CC3000_Server.h"
+#endif
 #include "utility/socket.h"
 
 class UDPServer {

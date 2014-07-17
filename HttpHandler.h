@@ -23,8 +23,10 @@
 	But I want to give credit to Marco because his code gave me a great working solution to start with - thank you Marco!
 */
 
-#include "Arduino.h"
-
+#include <Arduino.h>
+#ifdef CORE_WILDFIRE
+  #include <WildFire_CC3000_Server.h>
+#endif
 #define NUMBER_VARIABLES 9
 #define NUMBER_FUNCTIONS 2
 
@@ -76,7 +78,7 @@ public:
 		arguments = "";
 	}
 
-	void handle(Adafruit_CC3000_ClientRef client) {
+	void handle(WildFire_CC3000_ClientRef client) {
 		if (client.available()) {
 			// Handle request
 			handle_proto(client, true);
@@ -90,7 +92,11 @@ public:
 		} 
 	}
 
+#ifndef CORE_WILDFIRE
 	void handle_proto(Adafruit_CC3000_ClientRef serial, bool headers) {
+#else
+	void handle_proto(WildFire_CC3000_ClientRef serial, bool headers) {
+#endif
 		Serial.println("HttpHandler::handle_proto()");
 
 		// Check if there is data available to read

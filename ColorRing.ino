@@ -22,20 +22,8 @@
 	borad. It contains the setup() and loop() functions needed for any
 	Arduino program.
 */
-
-#ifdef CORE_WILDFIRE 
-#include <WildFire_CC3000.h>
-#include <WildFire_CC3000_MDNS.h>
-#include <WildFire_CC3000_Server.h"
-#else
-#include <Adafruit_CC3000.h>
-#include <CC3000_MDNS.h>
-#endif 
-
 #include <SPI.h>
 #include "utility/debug.h"  // for getFreeRam()
-#include <Ethernet.h>
-
 #include "HttpHandler.h"
 
 #include <EEPROM.h>
@@ -59,22 +47,23 @@ namespace std {
 
 #include "AllDefs.h"
 
-// Create CC3000 instance
-#ifdef CORE_WILDFIRE 
-WildFire_CC3000 cc3000;
+#include <Arduino.h>
+#ifndef CORE_WILDFIRE 
+  #include <Adafruit_CC3000.h>
+  #include <CC3000_MDNS.h>
+  Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT, SPI_CLOCK_DIV2);
+  Adafruit_CC3000_Server httpServer(LISTEN_PORT_HTTP);
 #else
-Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT, SPI_CLOCK_DIV2);
-#endif
+  #include <WildFire_CC3000.h>
+  #include <WildFire_CC3000_MDNS.h>
+  #include <WildFire_CC3000_Server.h>
+  WildFire_CC3000 cc3000;
+  WildFire_CC3000_Server httpServer(LISTEN_PORT_HTTP);
+#endif 
 
 // Create HTTP Handler instance
 HttpHandler hh = HttpHandler();
 
-// Server instance
-#ifdef CORE_WILDFIRE 
-WildFire_CC3000_Server httpServer(LISTEN_PORT_HTTP);
-#else
-Adafruit_CC3000_Server httpServer(LISTEN_PORT_HTTP);
-#endif
 EcmServer ecmServer(LISTEN_PORT_ECM);
 
 // DNS responder instance
@@ -215,7 +204,12 @@ void loop() {
 
 	//Serial.print("Free RAM Before http: "); Serial.println(getFreeRam(), DEC);
 	// Handle http calls (for setting modes & stripCmds)
+
+#ifndef CORE_WILDFIRE
 	Adafruit_CC3000_ClientRef httpClient = httpServer.available();
+#else
+	WildFire_CC3000_ClientRef httpClient = httpServer.available();
+#endif
 	hh.handle(httpClient);
 	//Serial.print("Free RAM After http: "); Serial.println(getFreeRam(), DEC);
 
@@ -558,7 +552,7 @@ int str2int(String s) {
 }
 
 int stripStep(boolean isOutside) {
-	string inOutStr = isOutside ? "OUTSIDE" : "INSIDE";
+	string inOutStr = isOutside ? "OUTSIDE" : "INSIDE";  // Keep for reference.
 	//cout << "**stripStep(" << str << ")" << endl;
 	
 	if (isOutside) {
