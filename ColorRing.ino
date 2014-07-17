@@ -23,11 +23,19 @@
 	Arduino program.
 */
 
+#ifdef CORE_WILDFIRE 
+#include <WildFire_CC3000.h>
+#include <WildFire_CC3000_MDNS.h>
+#include <WildFire_CC3000_Server.h"
+#else
 #include <Adafruit_CC3000.h>
+#include <CC3000_MDNS.h>
+#endif 
+
 #include <SPI.h>
 #include "utility/debug.h"  // for getFreeRam()
 #include <Ethernet.h>
-#include <CC3000_MDNS.h>
+
 #include "HttpHandler.h"
 
 #include <EEPROM.h>
@@ -52,13 +60,21 @@ namespace std {
 #include "AllDefs.h"
 
 // Create CC3000 instance
+#ifdef CORE_WILDFIRE 
+WildFire_CC3000 cc3000;
+#else
 Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT, SPI_CLOCK_DIV2);
+#endif
 
 // Create HTTP Handler instance
 HttpHandler hh = HttpHandler();
 
 // Server instance
+#ifdef CORE_WILDFIRE 
+WildFire_CC3000_Server httpServer(LISTEN_PORT_HTTP);
+#else
 Adafruit_CC3000_Server httpServer(LISTEN_PORT_HTTP);
+#endif
 EcmServer ecmServer(LISTEN_PORT_ECM);
 
 // DNS responder instance
